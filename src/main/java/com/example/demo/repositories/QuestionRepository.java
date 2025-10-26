@@ -1,6 +1,8 @@
 package com.example.demo.repositories;
 
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import com.example.demo.models.Question;
 import reactor.core.publisher.Flux;
@@ -31,4 +33,7 @@ public interface QuestionRepository extends ReactiveMongoRepository<Question, St
      * reactive programming).
      */
     // Mono<Long> countByAuthorId(String authorId);
+
+    @Query("{ '$or': [   { 'title': { $regex: ?0, $options: 'i' } }, { 'content':  { $regex: ?0, $options: 'i' } }] }")
+    Flux<Question> findByTitleOrContentContainingIgnoreCase(String searchTerm, Pageable pageable);
 }

@@ -1,6 +1,9 @@
 package com.example.demo.services;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import com.example.demo.adapter.QuestionAdapter;
@@ -29,5 +32,13 @@ public class QuestionService implements IQuestionService {
         return questionRepository.save(question).map(QuestionAdapter::toQuestionResponseDTO)
                 .doOnSuccess(response -> System.out.println("Question created successfully: " + response))
                 .doOnError(error -> System.out.println("Error creating Question: " + error));
+    }
+
+    @Override
+    public Flux<QuestionResponseDTO> searchQuestions(String searchTerm, int offset, int page) {
+        return questionRepository.findByTitleOrContentContainingIgnoreCase(searchTerm, PageRequest.of(offset, page))
+                .map(QuestionAdapter::toQuestionResponseDTO)
+                .doOnError(error -> System.out.println("Error searching questions: " + error))
+                .doOnComplete(() -> System.out.println("Questions searched successfully"));
     }
 }
