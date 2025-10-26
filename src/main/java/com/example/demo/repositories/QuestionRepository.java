@@ -8,6 +8,8 @@ import com.example.demo.models.Question;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
+
 /*
     Here <Question, String> is the type of the entity and the type of the id.    
 */
@@ -36,4 +38,13 @@ public interface QuestionRepository extends ReactiveMongoRepository<Question, St
 
     @Query("{ '$or': [   { 'title': { $regex: ?0, $options: 'i' } }, { 'content':  { $regex: ?0, $options: 'i' } }] }")
     Flux<Question> findByTitleOrContentContainingIgnoreCase(String searchTerm, Pageable pageable);
+
+    /*
+        We don't have to write query
+        Because of Spring Data’s Derived Query Methods —
+        a feature where Spring automatically parses your method name and builds the MongoDB query for you.
+    */
+    Flux<Question> findByCreatedAtGreaterThanOrderByCreatedAtAsc(LocalDateTime cursor, Pageable pageable);
+
+    Flux<Question> findTop10ByOrderByCreatedAtAsc();
 }

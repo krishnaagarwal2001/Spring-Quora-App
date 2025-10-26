@@ -1,6 +1,8 @@
 package com.example.demo.services;
 
+import com.example.demo.utils.CursorUtils;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import reactor.core.publisher.Flux;
@@ -13,6 +15,8 @@ import com.example.demo.models.Question;
 import com.example.demo.repositories.QuestionRepository;
 
 import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDateTime;
 
 /*
     @RequiredArgsConstructor is used to generate a constructor with required arguments.
@@ -40,5 +44,24 @@ public class QuestionService implements IQuestionService {
                 .map(QuestionAdapter::toQuestionResponseDTO)
                 .doOnError(error -> System.out.println("Error searching questions: " + error))
                 .doOnComplete(() -> System.out.println("Questions searched successfully"));
+    }
+
+    @Override
+    public Flux<QuestionResponseDTO> getAllQuestions(String cursor, int size) {
+        Pageable pageable = PageRequest.of(0, size);
+
+        if(!CursorUtils.isValidCursor(cursor)){
+            return questionRepository.findTop10ByOrderByCreatedAtAsc()
+                    .take(size)
+                    .map(QuestionAdapter::toQuestionResponseDTO)
+                    .doOnError(error -> System.out.println("Error searching questions: " + error))
+                    .doOnComplete(() -> System.out.println("Questions searched successfully"));
+        }else{
+            LocalDateTime cursorTimeStamp = CursorUtils.parseCursor(cursor);
+            return questionRepository.findByCreatedAtGreaterThanOrderByCreatedAtAsc(cursorTimeStamp,pageable)
+                    .map(QuestionAdapter::toQuestionResponseDTO)
+                    .doOnError(error -> System.out.println("Error searching questions: " + error))
+                    .doOnComplete(() -> System.out.println("Questions searched successfully"));
+        }
     }
 }
